@@ -58,7 +58,7 @@ class DistModel(BaseModel):
         self.spatial_factor = spatial_factor
 
         self.model_name = '%s [%s]'%(model,net)
-        if(self.model == 'net-lin'): # pretrained net + linear layer
+        if(self.model == 'net-lin'): # pretrained net + linear layer事前学習済みネット + 線形層
             self.net = networks.PNetLin(use_gpu=use_gpu,pnet_rand=pnet_rand, pnet_tune=pnet_tune, pnet_type=net,use_dropout=True,spatial=spatial,version=version)
             kw = {}
             if not use_gpu:
