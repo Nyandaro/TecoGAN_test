@@ -31,9 +31,10 @@ def deprocessLR(image):
     with tf.name_scope("deprocessLR"):
         return tf.identity(image)
 
-# Define the convolution transpose building block
+# Define the convolution transpose building block # 畳み込み転置ビルディングブロックを定義する
 def conv2_tran(batch_input, kernel=3, output_channel=64, stride=1, use_bias=True, scope='conv'):
     # kernel: An integer specifying the width and height of the 2D convolution window
+    # kernel: 2D 畳み込みウィンドウの幅と高さを指定する整数
     with tf.variable_scope(scope):
         if use_bias:
             return slim.conv2d_transpose(batch_input, output_channel, [kernel, kernel], stride, 'SAME', data_format='NHWC',
@@ -43,9 +44,10 @@ def conv2_tran(batch_input, kernel=3, output_channel=64, stride=1, use_bias=True
                             activation_fn=None, weights_initializer=tf.contrib.layers.xavier_initializer(),
                             biases_initializer=None)
 
-# Define the convolution building block
+# Define the convolution building block # 畳み込みビルディングブロックを定義する
 def conv2(batch_input, kernel=3, output_channel=64, stride=1, use_bias=True, scope='conv'):
     # kernel: An integer specifying the width and height of the 2D convolution window
+    # kernel: 2D 畳み込みウィンドウの幅と高さを指定する整数
     with tf.variable_scope(scope):
         if use_bias:
             return slim.conv2d(batch_input, output_channel, [kernel, kernel], stride, 'SAME', data_format='NHWC',
@@ -57,8 +59,9 @@ def conv2(batch_input, kernel=3, output_channel=64, stride=1, use_bias=True, sco
 
 
 def conv2_NCHW(batch_input, kernel=3, output_channel=64, stride=1, use_bias=True, scope='conv_NCHW'):
-    # Use NCWH to speed up the inference
+    # Use NCWH to speed up the inference # NCWH を使用して推論を高速化する
     # kernel: list of 2 integer specifying the width and height of the 2D convolution window
+    # カーネル: 2D 畳み込みウィンドウの幅と高さを指定する 2 つの整数のリスト
     with tf.variable_scope(scope):
         if use_bias:
             return slim.conv2d(batch_input, output_channel, [kernel, kernel], stride, 'SAME', data_format='NCWH',
@@ -69,7 +72,7 @@ def conv2_NCHW(batch_input, kernel=3, output_channel=64, stride=1, use_bias=True
                                biases_initializer=None)
 
 
-# Define our tensorflow version PRelu
+# Define our tensorflow version PRelu # tensorflow バージョン PRelu を定義します
 def prelu_tf(inputs, name='Prelu'):
     with tf.variable_scope(name):
         alphas = tf.get_variable('alpha', inputs.get_shape()[-1], initializer=tf.zeros_initializer(), \
@@ -80,7 +83,7 @@ def prelu_tf(inputs, name='Prelu'):
     return pos + neg
 
 
-# Define our Lrelu
+# Define our Lrelu # Lrelu を定義する
 def lrelu(inputs, alpha):
     return keras.layers.LeakyReLU(alpha=alpha).call(inputs)
 
@@ -92,9 +95,9 @@ def batchnorm(inputs, is_training):
 def maxpool(inputs, scope='maxpool'):
     return slim.max_pool2d(inputs, [2, 2], scope=scope)
     
-# Our dense layer
+# Our dense layer # 私たちの緻密な層
 def denselayer(inputs, output_size):
-    # Rachel todo, put it to Model variable_scope
+    # Rachel todo, put it to Model variable_scope # Rachel todo、モデルの variable_scope に入れます
     denseLayer = tf.layers.Dense(output_size, activation=None, kernel_initializer=tf.contrib.layers.xavier_initializer())
     output = denseLayer.apply(inputs)
     tf.add_to_collection( name=tf.GraphKeys.MODEL_VARIABLES, value=denseLayer.kernel )
@@ -102,7 +105,7 @@ def denselayer(inputs, output_size):
     
     return output
 
-# The implementation of PixelShuffler
+# The implementation of PixelShuffler # PixelShuffler の実装
 def pixelShuffler(inputs, scale=2):
     size = tf.shape(inputs)
     batch_size = size[0]
@@ -110,7 +113,7 @@ def pixelShuffler(inputs, scale=2):
     w = size[2]
     c = inputs.get_shape().as_list()[-1]
 
-    # Get the target channel size
+    # Get the target channel size # ターゲットチャネルサイズを取得する
     channel_target = c // (scale * scale)
     channel_factor = c // channel_target
 
@@ -118,12 +121,13 @@ def pixelShuffler(inputs, scale=2):
     shape_2 = [batch_size, h * scale, w * scale, 1]
 
     # Reshape and transpose for periodic shuffling for each channel
+    # 各チャンネルの定期的なシャッフルのためのリシェイプとトランスポーズ
     input_split = tf.split(inputs, channel_target, axis=3)
     output = tf.concat([phaseShift(x, scale, shape_1, shape_2) for x in input_split], axis=3)
 
     return output
     
-def upscale_four(inputs, scope='upscale_four'): # mimic the tensorflow bilinear-upscaling for a fix ratio of 4
+def upscale_four(inputs, scope='upscale_four'): # mimic the tensorflow bilinear-upscaling for a fix ratio of 4 # 修正率 4 の tensorflow 双線形アップスケーリングを模倣します。
     with tf.variable_scope(scope):
         size = tf.shape(inputs)
         b = size[0]
@@ -212,13 +216,14 @@ def bicubic_four(inputs, scope='bicubic_four'):
     return hi_res
 
 def phaseShift(inputs, scale, shape_1, shape_2):
-    # Tackle the condition when the batch is None
+    # Tackle the condition when the batch is None # バッチが None の場合の条件に対処します
     X = tf.reshape(inputs, shape_1)
     X = tf.transpose(X, [0, 1, 3, 2, 4])
 
     return tf.reshape(X, shape_2)
 
 # The random flip operation used for loading examples of one batch
+# 1 つのバッチのサンプルをロードするために使用されるランダムな反転操作
 def random_flip_batch(input, decision):
     f1 = tf.identity(input)
     f2 = tf.image.flip_left_right(input)
@@ -227,6 +232,7 @@ def random_flip_batch(input, decision):
     return output
 
 # The random flip operation used for loading examples
+# サンプルのロードに使用されるランダムな反転操作
 def random_flip(input, decision):
     f1 = tf.identity(input)
     f2 = tf.image.flip_left_right(input)
@@ -235,6 +241,7 @@ def random_flip(input, decision):
     return output
 
 # The operation used to print out the configuration
+# 設定を出力するために使用される操作
 def print_configuration_op(FLAGS):
     print('[Configurations]:')
     for name, value in FLAGS.flag_values_dict().items():
@@ -314,6 +321,7 @@ def vgg_19(inputs,
   with tf.variable_scope(scope, 'vgg_19', [inputs], reuse=reuse) as sc:
     end_points_collection = sc.name + '_end_points'
     # Collect outputs for conv2d, fully_connected and max_pool2d.
+      # conv2d、full_connected、max_pool2d の出力を収集します。
     with slim.arg_scope([slim.conv2d, slim.fully_connected, slim.max_pool2d],
                         outputs_collections=end_points_collection):
       net = slim.repeat(inputs, 2, slim.conv2d, 64, 3, scope='conv1', reuse=reuse)
@@ -327,8 +335,10 @@ def vgg_19(inputs,
       net = slim.repeat(net, 4, slim.conv2d, 512, 3, scope='conv5',reuse=reuse)
       net = slim.max_pool2d(net, [2, 2], scope='pool5')
       # fully_connected layers are skipped here! because we only need the feature maps
-      #     from the previous layers
+    # 完全に接続されたレイヤーはここではスキップされます。必要なのは特徴マップだけなので
+      #     from the previous layers # 前のレイヤーから
       # Convert end_points_collection into a end_point dict.
+    # end_points_collection を end_point dict に変換します。
       end_points = slim.utils.convert_collection_to_dict(end_points_collection)
 
       return net, end_points
@@ -356,7 +366,7 @@ def tf_data_gaussDownby4( HRdata, sigma = 1.5 ):
     gau_list = np.float32(  [
         [gau_k, gau_0, gau_0],
         [gau_0, gau_k, gau_0],
-        [gau_0, gau_0, gau_k]]  ) # only works for RGB images!
+        [gau_0, gau_0, gau_k]]  ) # only works for RGB images! # RGB 画像に対してのみ機能します!
     gau_wei = np.transpose( gau_list, [2,3,0,1] )
     
     with tf.device('/gpu:0'):
@@ -390,7 +400,7 @@ def get_existing_from_ckpt(ckpt, var_list=None, rest_zero=False, print_level=1):
                 ops.append(var.assign(npzeros))
     return ops
     
-# gif summary
+# gif summary # GIF の概要
 """gif_summary_v2.ipynb, Original file is located at
 [a future version] https://colab.research.google.com/drive/1CSOrCK8-iQCZfs3CVchLE42C52M_3Sej
 [current version]  https://colab.research.google.com/drive/1vgD2HML7Cea_z5c3kPBcsHUIxaEVDiIc
