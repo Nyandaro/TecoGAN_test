@@ -83,19 +83,19 @@ def cos_sim(in0,in1):
 
     return torch.mean(torch.mean(torch.sum(in0_norm*in1_norm,dim=1).view(N,1,X,Y),dim=2).view(N,1,1,Y),dim=3).view(N)
 
-# Converts a Tensor into a Numpy array
-# |imtype|: the desired type of the conve
+# Converts a Tensor into a Numpy array  Tensor を Numpy 配列に変換します
+# |imtype|: the desired type of the conve      |imtype|: 変換の目的のタイプ
 
 def tensor2np(tensor_obj):
-    # change dimension of a tensor object into a numpy array
+    # change dimension of a tensor object into a numpy array テンソルオブジェクトの次元をnumpy配列に変更します
     return tensor_obj[0].cpu().float().numpy().transpose((1,2,0))
 
 def np2tensor(np_obj):
-     # change dimenion of np array into tensor array
+     # change dimenion of np array into tensor array   np配列の次元をテンソル配列に変更します
     return torch.Tensor(np_obj[:, :, :, np.newaxis].transpose((3, 2, 0, 1)))
 
 def tensor2tensorlab(image_tensor,to_norm=True,mc_only=False):
-    # image tensor to lab tensor
+    # image tensor to lab tensor   イメージテンソルからラボテンソルへ
     from skimage import color
 
     img = tensor2im(image_tensor)
@@ -122,7 +122,7 @@ def tensorlab2tensor(lab_tensor,return_inbnd=False):
     rgb_back = 255.*np.clip(color.lab2rgb(lab.astype('float')),0,1)
     # print('rgb',rgb_back)
     if(return_inbnd):
-        # convert back to lab, see if we match
+        # convert back to lab, see if we match  ラボに戻して変換し、一致するかどうかを確認します
         lab_back = color.rgb2lab(rgb_back.astype('uint8'))
         # print('lab_back',lab_back)
         # print('lab==lab_back',np.isclose(lab_back,lab,atol=1.))
@@ -180,7 +180,7 @@ def load_image(path):
 def resize_image(img, max_size=256):
     [Y, X] = img.shape[:2]
 
-    # resize
+    # resize   サイズ変更
     max_dim = max([Y, X])
     zoom_factor = 1. * max_size / max_dim
     img = zoom(img, [zoom_factor, zoom_factor, 1])
@@ -206,8 +206,8 @@ def prep_display_image(img, dtype='uint8'):
 
 
 def info(object, spacing=10, collapse=1):
-    """Print methods and doc strings.
-    Takes module, class, list, dictionary, or string."""
+    """Print methods and doc strings. メソッドとドキュメント文字列を出力します。
+    Takes module, class, list, dictionary, or string.モジュール、クラス、リスト、辞書、または文字列を受け取ります。"""
     methodList = [
         e for e in dir(object) if isinstance(
             getattr(
@@ -275,13 +275,13 @@ def montage(
              0))):
     # INPUTS
     #   imgs        YxXxMxN or YxXxN
-    #   PAD         scalar              number of pixels in between
-    #   RATIO       scalar              target ratio of cols/rows
-    #   MM          scalar              # rows, if specified, overrides RATIO
-    #   NN          scalar              # columns, if specified, overrides RATIO
-    #   primeDir    scalar              0 for top-to-bottom, 1 for left-to-right
+    #   PAD         scalar              number of pixels in between  間のピクセル数
+    #   RATIO       scalar              target ratio of cols/rows  列/行の目標比率
+    #   MM          scalar              # rows, if specified, overrides RATIO  rows を指定すると、RATIO がオーバーライドされます。
+    #   NN          scalar              # columns, if specified, overrides RATIO  列が指定されている場合、RATIO がオーバーライドされます。
+    #   primeDir    scalar              0 for top-to-bottom, 1 for left-to-right   0 は上から下へ、1 は左から右へ
     # OUTPUTS
-    #   mont_imgs   MM*Y x NN*X x M     big image with everything montaged
+    #   mont_imgs   MM*Y x NN*X x M     big image with everything montaged  すべてがモンタージュされた大きな画像
     # def montage(imgs, PAD=5, RATIO=16/9., MM=-1, NN=-1, primeDir=0,
     # verbose=False, forceFloat=False):
     if(imgs.ndim == 3):
@@ -377,7 +377,7 @@ class zeroClipper(object):
             module.weight.data = torch.max(module.weight.data, 0) + 100
 
 def flatten_nested_list(nested_list):
-    # only works for list of list
+    # only works for list of list # リストのリストに対してのみ機能します
     accum = []
     for sublist in nested_list:
         for item in sublist:
@@ -434,17 +434,17 @@ def voc_ap(rec, prec, use_07_metric=False):
                 p = np.max(prec[rec >= t])
             ap = ap + p / 11.
     else:
-        # correct AP calculation
-        # first append sentinel values at the end
+        # correct AP calculation # 正しいAP計算
+        # first append sentinel values at the end # 最初にセンチネル値を最後に追加します
         mrec = np.concatenate(([0.], rec, [1.]))
         mpre = np.concatenate(([0.], prec, [0.]))
 
-        # compute the precision envelope
+        # compute the precision envelope # 精度エンベロープを計算する
         for i in range(mpre.size - 1, 0, -1):
             mpre[i - 1] = np.maximum(mpre[i - 1], mpre[i])
 
-        # to calculate area under PR curve, look for points
-        # where X axis (recall) changes value
+        # to calculate area under PR curve, look for points # PR 曲線の下の面積を計算するには、点を探します
+        # where X axis (recall) changes value # X 軸 (リコール) が値を変更する場所
         i = np.where(mrec[1:] != mrec[:-1])[0]
 
         # and sum (\Delta recall) * prec
