@@ -2,9 +2,10 @@
 
 '''
 This module contains some common routines used by other samples.
+このモジュールには、他のサンプルで使用されるいくつかの共通ルーチンが含まれています。
 '''
 
-# Python 2/3 compatibility
+# Python 2/3 compatibility # Python 2/3 互換性
 from __future__ import print_function
 import sys
 PY3 = sys.version_info[0] == 3
@@ -15,7 +16,7 @@ if PY3:
 import numpy as np
 import cv2 as cv
 
-# built-in modules
+# built-in modules # 組み込みモジュール
 import os
 import itertools as it
 from contextlib import contextmanager
@@ -111,7 +112,7 @@ class Sketcher:
             self.show()
 
 
-# palette data from matplotlib/_cm.py
+# palette data from matplotlib/_cm.py # matplotlib/_cm.py からのパレット データ
 _jet_data =   {'red':   ((0., 0, 0), (0.35, 0, 0), (0.66, 1, 1), (0.89,1, 1),
                          (1, 0.5, 0.5)),
                'green': ((0., 0, 0), (0.125,0, 0), (0.375,1, 1), (0.64,1, 1),
