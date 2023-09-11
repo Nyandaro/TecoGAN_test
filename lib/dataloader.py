@@ -6,8 +6,8 @@ import collections, os, math
 import numpy as np
 from scipy import signal
 
-# The inference data loader. 
-# should be a png sequence
+# The inference data loader. # 推論データローダー。
+# should be a png sequence  # png シーケンスである必要があります
 def inference_data_loader(FLAGS):
 
     filedir = FLAGS.input_dir_LR
@@ -20,14 +20,14 @@ def inference_data_loader(FLAGS):
         
     image_list_LR_temp = os.listdir(filedir)
     image_list_LR_temp = [_ for _ in image_list_LR_temp if _.endswith(".png")] 
-    image_list_LR_temp = sorted(image_list_LR_temp) # first sort according to abc, then sort according to 123
+    image_list_LR_temp = sorted(image_list_LR_temp) # first sort according to abc, then sort according to 123 # 最初に abc に従ってソートし、次に 123 に従ってソートします
     image_list_LR_temp.sort(key=lambda f: int(''.join(list(filter(str.isdigit, f))) or -1))
     if FLAGS.input_dir_len > 0:
         image_list_LR_temp = image_list_LR_temp[:FLAGS.input_dir_len]
         
     image_list_LR = [os.path.join(filedir, _) for _ in image_list_LR_temp]
 
-    # Read in and preprocess the images
+    # Read in and preprocess the images # 画像を読み込んで前処理する
     def preprocess_test(name):
         im = cv.imread(name,3).astype(np.float32)[:,:,::-1]
         
@@ -39,7 +39,7 @@ def inference_data_loader(FLAGS):
 
     image_LR = [preprocess_test(_) for _ in image_list_LR]
     
-    if True: # a hard-coded symmetric padding
+    if True: # a hard-coded symmetric padding  # ハードコーディングされた対称パディング
         image_list_LR = image_list_LR[5:0:-1] + image_list_LR
         image_LR = image_LR[5:0:-1] + image_LR
 
@@ -49,11 +49,11 @@ def inference_data_loader(FLAGS):
         inputs=image_LR
     )
 
-# load hi-res data from disk
+# load hi-res data from disk # ディスクから高解像度データをロードする
 def loadHR_batch(FLAGS, tar_size):
-    # file processing on CPU
+    # file processing on CPU # CPU でのファイル処理
     with tf.device('/cpu:0'):
-        #Check the input directory
+        #Check the input directory #入力ディレクトリを確認する
         if (FLAGS.input_video_dir == ''):
             raise ValueError('Video input directory input_video_dir is not provided')
         if (not os.path.exists(FLAGS.input_video_dir)):
@@ -63,7 +63,7 @@ def loadHR_batch(FLAGS, tar_size):
         with tf.variable_scope('load_frame'):
             for dir_i in range(FLAGS.str_dir, FLAGS.end_dir+1):
                 inputDir = os.path.join( FLAGS.input_video_dir, '%s_%04d' %(FLAGS.input_video_pre, dir_i) )
-                if (os.path.exists(inputDir)): # the following names are hard coded: col_high_
+                if (os.path.exists(inputDir)): # the following names are hard coded: col_high_ # 次の名前はハードコードされています:col_high_
                     if not os.path.exists(os.path.join(inputDir ,'col_high_%04d.png' % FLAGS.max_frm) ):
                         print("Skip %s, since foler doesn't contain enough frames!" % inputDir)
                         continue
@@ -75,7 +75,7 @@ def loadHR_batch(FLAGS, tar_size):
             input_slices = tf.train.slice_input_producer([tensor_set_lists], shuffle=False,
                                             capacity=int(FLAGS.name_video_queue_capacity) )
             
-            input_slices = input_slices[0] # one slice contains pathes for (FLAGS.max_frm frames + 1) frames
+            input_slices = input_slices[0] # one slice contains pathes for (FLAGS.max_frm frames + 1) frames # 1 つのスライスには (FLAGS.max_frm フレーム + 1) フレーム分のパスが含まれます
             
             HR_data = []
             for frame_i in range(FLAGS.max_frm + 1 ):
@@ -84,30 +84,31 @@ def loadHR_batch(FLAGS, tar_size):
                                     dtype=tf.float32)
                 HR_data += [HR_data_i]
             # the reshape after loading is necessary as the unkown output shape crashes the cropping op
+            # 不明な出力形状によりトリミング操作がクラッシュするため、ロード後の形状変更が必要です
             HR_data = tf.stack(HR_data, axis=0)
             HR_shape = tf.shape(HR_data)#(FLAGS.max_frm+1, h, w, 3))
             HR_data = tf.reshape(HR_data, (HR_shape[0], HR_shape[1], HR_shape[2], HR_shape[3]))
             
-        # sequence preparation and data augmentation part
+        # sequence preparation and data augmentation part # シーケンスの準備とデータ拡張部分
         with tf.name_scope('sequence_data_preprocessing'):
             sequence_length = FLAGS.max_frm - FLAGS.RNN_N + 1
             num_image_list_HR_t_cur = len(image_set_lists)*sequence_length
             HR_sequences, name_sequences = [], []
             if FLAGS.random_crop and FLAGS.mode == 'train':
                 print('[Config] Use random crop')
-                # a k_w_border margin is in tar_size for gaussian blur
-                # have to use the same crop because crop_to_bounding_box only accept one value
+                # a k_w_border margin is in tar_size for gaussian blur # k_w_border マージンはガウスぼかしの tar_size にあります
+                # have to use the same crop because crop_to_bounding_box only accept one value # Crop_to_bounding_box は 1 つの値しか受け入れないため、同じクロップを使用する必要があります
                 offset_w = tf.cast(tf.floor(tf.random_uniform([], 0, \
                     tf.cast(HR_shape[-2], tf.float32) - tar_size )),dtype=tf.int32)
                 offset_h = tf.cast(tf.floor(tf.random_uniform([], 0, \
                     tf.cast(HR_shape[-3], tf.float32) - tar_size )),dtype=tf.int32) 
             else:
-                raise Exception('Not implemented') # train_data can have different resolutions, crop is necessary    
+                raise Exception('Not implemented') # train_data can have different resolutions, crop is necessary  # train_data は異なる解像度を持つことができるため、トリミングが必要です   
             
             if(FLAGS.movingFirstFrame): 
                 print('[Config] Move first frame')
-                # our data augmentation, moving first frame to mimic camera motion
-                # random motions, one slice use the same motion
+                # our data augmentation, moving first frame to mimic camera motion # カメラの動きを模倣するために最初のフレームを移動するデータ拡張
+                # random motions, one slice use the same motion # 個のランダムなモーション、1 つのスライスが同じモーションを使用
                 offset_xy = tf.cast(tf.floor(tf.random_uniform([FLAGS.RNN_N, 2], -3.5,4.5)),dtype=tf.int32)
                 # [FLAGS.RNN_N , 2], relative positions
                 pos_xy = tf.cumsum(offset_xy, axis=0, exclusive=True) 
@@ -121,7 +122,7 @@ def loadHR_batch(FLAGS, tar_size):
             
             if FLAGS.flip and (FLAGS.mode == 'train'):
                 print('[Config] Use random flip')
-                # Produce the decision of random flip
+                # Produce the decision of random flip # ランダムフリップの判定を生成
                 flip_decision = tf.random_uniform([sequence_length], 0, 1, dtype=tf.float32)
                 
             for fi in range( FLAGS.RNN_N ):
@@ -131,13 +132,14 @@ def loadHR_batch(FLAGS, tar_size):
                 if (FLAGS.flip is True) and (FLAGS.mode == 'train'):
                     HR_sequence = random_flip_batch(HR_sequence, flip_decision)
                     
-                # currently, it is necessary to crop, because training videos have different resolutions
+                # currently, it is necessary to crop, because training videos have different resolutions 
+                # 現在、トレーニングビデオの解像度が異なるため、トリミングする必要があります
                 if FLAGS.random_crop and FLAGS.mode == 'train':
                     HR_sequence_crop = tf.image.crop_to_bounding_box(HR_sequence, 
                             offset_h, offset_w, tar_size, tar_size)
                             
                     if FLAGS.movingFirstFrame:
-                        if(fi == 0): # always use the first frame
+                        if(fi == 0): # always use the first frame # 常に最初のフレームを使用する
                             HR_data_0 = tf.identity(HR_sequence)
                             name_0 = tf.identity(name_sequence)
                             
@@ -164,25 +166,25 @@ def loadHR_batch(FLAGS, tar_size):
                         batch_size=int(FLAGS.batch_size), capacity=FLAGS.video_queue_capacity+FLAGS.video_queue_batch*sequence_length,
                         min_after_dequeue=FLAGS.video_queue_capacity, num_threads=FLAGS.queue_thread, seed = FLAGS.rand_seed)
         
-    return batch_list, num_image_list_HR_t_cur # a k_w_border margin is in there for gaussian blur
+    return batch_list, num_image_list_HR_t_cur # a k_w_border margin is in there for gaussian blur # ガウスぼかしのために k_w_border マージンが入っています
     
-# load hi-res data from disk
+# load hi-res data from disk # ディスクから高解像度データをロードする
 def loadHR(FLAGS, tar_size):
-    # a k_w_border margin should be in tar_size for Gaussian blur
+    # a k_w_border margin should be in tar_size for Gaussian blur # ガウスぼかしの場合、k_w_border マージンは tar_size になければなりません
     
     with tf.device('/cpu:0'):
-        #Check the input directory
+        #Check the input directory #入力ディレクトリを確認する
         if (FLAGS.input_video_dir == ''):
             raise ValueError('Video input directory input_video_dir is not provided')
 
         if (not os.path.exists(FLAGS.input_video_dir)):
             raise ValueError('Video input directory not found')
 
-        image_list_HR_r = [[] for _ in range( FLAGS.RNN_N )] # all empty lists
+        image_list_HR_r = [[] for _ in range( FLAGS.RNN_N )] # all empty lists # すべて空のリスト
         
         for dir_i in range(FLAGS.str_dir, FLAGS.end_dir+1):
             inputDir = os.path.join( FLAGS.input_video_dir, '%s_%04d' %(FLAGS.input_video_pre, dir_i) )
-            if (os.path.exists(inputDir)): # the following names are hard coded
+            if (os.path.exists(inputDir)): # the following names are hard coded # 次の名前はハードコードされています
                 if not os.path.exists(os.path.join(inputDir ,'col_high_%04d.png' % FLAGS.max_frm) ):
                     print("Skip %s, since foler doesn't contain enough frames!" % inputDir)
                     continue
@@ -197,18 +199,18 @@ def loadHR(FLAGS, tar_size):
         image_list_HR_r = [tf.convert_to_tensor(_ , dtype=tf.string) for _ in image_list_HR_r ]
 
         with tf.variable_scope('load_frame'):
-            # define the image list queue
+            # define the image list queue # イメージリストキューを定義する
             output = tf.train.slice_input_producer(image_list_HR_r, shuffle=False,\
                 capacity=int(FLAGS.name_video_queue_capacity) )
             output_names = output
             
-            data_list_HR_r = []# high res rgb, in range 0-1, shape any
+            data_list_HR_r = []# high res rgb, in range 0-1, shape any # 高解像度RGB、範囲0～1、任意の形状
                 
-            if FLAGS.movingFirstFrame and FLAGS.mode == 'train': # our data augmentation, moving first frame to mimic camera motion
+            if FLAGS.movingFirstFrame and FLAGS.mode == 'train': # our data augmentation, moving first frame to mimic camera motion # カメラの動きを模倣するために最初のフレームを移動するデータ拡張
                 print('[Config] Use random crop')
                 offset_xy = tf.cast(tf.floor(tf.random_uniform([FLAGS.RNN_N, 2], -3.5,4.5)),dtype=tf.int32)
                 # [FLAGS.RNN_N , 2], shifts
-                pos_xy = tf.cumsum(offset_xy, axis=0, exclusive=True) # relative positions
+                pos_xy = tf.cumsum(offset_xy, axis=0, exclusive=True) # relative positions # 相対位置
                 min_pos = tf.reduce_min( pos_xy, axis=0 )
                 range_pos = tf.reduce_max( pos_xy, axis=0 ) - min_pos # [ shrink x, shrink y ]
                 lefttop_pos = pos_xy - min_pos # crop point
@@ -230,11 +232,11 @@ def loadHR(FLAGS, tar_size):
             
             target_images = data_list_HR_r
         
-        # Other data augmentation part
+        # Other data augmentation part # その他のデータ拡張部分
         with tf.name_scope('data_preprocessing'):
             
             with tf.name_scope('random_crop'):
-                # Check whether perform crop
+                # Check whether perform crop # クロップを行うかどうかを確認する
                 if (FLAGS.random_crop is True) and FLAGS.mode == 'train':
                     print('[Config] Use random crop')
                     target_size = tf.shape(target_images[0])
@@ -252,10 +254,10 @@ def loadHR(FLAGS, tar_size):
                     raise Exception('Not implemented')
             
             with tf.variable_scope('random_flip'):
-                # Check for random flip:
+                # Check for random flip: # ランダムな反転をチェックします:
                 if (FLAGS.flip is True) and (FLAGS.mode == 'train'):
                     print('[Config] Use random flip')
-                    # Produce the decision of random flip
+                    # Produce the decision of random flip # ランダムフリップの判定を生成
                     flip_decision = tf.random_uniform([], 0, 1, dtype=tf.float32)
                     for frame_t in range(FLAGS.RNN_N):
                         target_images[frame_t] = random_flip(target_images[frame_t], flip_decision)
@@ -270,18 +272,20 @@ def loadHR(FLAGS, tar_size):
                             min_after_dequeue=FLAGS.video_queue_capacity, num_threads=FLAGS.queue_thread, seed = FLAGS.rand_seed)
         else:
             raise Exception('Not implemented')
-    return batch_list, num_image_list_HR_t_cur # a k_w_border margin is still there for gaussian blur!!
+    return batch_list, num_image_list_HR_t_cur # a k_w_border margin is still there for gaussian blur!! # a k_w_border margin is still there for gaussian blur!!
 
 
-def frvsr_gpu_data_loader(FLAGS, useValData_ph): # useValData_ph, tf bool placeholder, whether to use validationdata
+def frvsr_gpu_data_loader(FLAGS, useValData_ph): # useValData_ph, tf bool placeholder, whether to use validationdata # useValData_ph、tf bool プレースホルダー、validationdata を使用するかどうか
     Data = collections.namedtuple('Data', 'paths_HR, s_inputs, s_targets, image_count, steps_per_epoch')
     tar_size = FLAGS.crop_size
-    tar_size = (FLAGS.crop_size * 4 ) + int(1.5 * 3.0) * 2 # crop_size * 4, and Gaussian blur margin
+    tar_size = (FLAGS.crop_size * 4 ) + int(1.5 * 3.0) * 2 # crop_size * 4, and Gaussian blur margin # Crop_size * 4、およびガウスぼかしマージン
     k_w_border = int(1.5 * 3.0)
     
     loadHRfunc = loadHR if FLAGS.queue_thread > 4 else loadHR_batch
     # loadHR_batch load 120 frames at once, is faster for a single queue, and usually will be slower and slower for larger queue_thread
+    #loadHR_batch 120 フレームを一度にロードします。単一のキューの場合は高速ですが、通常、queue_thread が大きくなると徐々に遅くなります。
     # loadHR load RNN_N frames at once, is faster when queue_thread > 4, but slow for queue_thread < 4
+    #loadHR RNN_N フレームを一度にロードします。 queue_thread > 4 の場合は高速ですが、queue_thread < 4 の場合は遅くなります。
     
     with tf.name_scope('load_frame_cpu'):
         with tf.name_scope('train_data'):
@@ -296,8 +300,8 @@ def frvsr_gpu_data_loader(FLAGS, useValData_ph): # useValData_ph, tf bool placeh
                     "video_queue_capacity":val_capacity, "queue_thread":val_q_thread})
             vald_batch_list, vald_num_image_list_HR_t_cur = loadHRfunc(valFLAGS, tar_size)
             
-    HR_images = list(batch_list[FLAGS.RNN_N::])# batch high-res images
-    HR_images_vald = list(vald_batch_list[FLAGS.RNN_N::])# test batch high-res images
+    HR_images = list(batch_list[FLAGS.RNN_N::])# batch high-res images # 個の高解像度画像をバッチ処理する
+    HR_images_vald = list(vald_batch_list[FLAGS.RNN_N::])# test batch high-res images # テストバッチの高解像度画像
     
     steps_per_epoch = num_image_list_HR_t_cur // FLAGS.batch_size
     
@@ -326,6 +330,7 @@ def frvsr_gpu_data_loader(FLAGS, useValData_ph): # useValData_ph, tf bool placeh
             
             
             # for Ds, inputs_batch and targets_batch are just the input and output:
+            # D の場合、inputs_batch と target_batch は単なる入力と出力です。
             S_inputs_frames = tf.stack(input_images, axis = 1) # batch, frame, FLAGS.crop_size, FLAGS.crop_size, sn
             S_targets_frames = tf.stack(target_images, axis = 1) # batch, frame, FLAGS.crop_size*4, FLAGS.crop_size*4, 3
             S_inputs_frames.set_shape( (FLAGS.batch_size,FLAGS.RNN_N,FLAGS.crop_size,FLAGS.crop_size,3) )
