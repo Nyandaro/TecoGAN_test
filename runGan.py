@@ -81,11 +81,11 @@ elif( runcase == 1 ): # inference a trained model # トレーニング済みモ�
             "--input_dir_LR", os.path.join("./LR/", testpre[nn]),   # the LR directory
             #"--input_dir_HR", os.path.join("./HR/", testpre[nn]),  # the HR directory
             # one of (input_dir_HR,input_dir_LR) should be given
-                # (input_dir_HR,input_dir_LR) のいずれかを指定する必要があります
-            "--output_pre", testpre[nn], # the subfolder to save current scene, optional
-            "--num_resblock", "16",  # our model has 16 residual blocks, 
+            # (input_dir_HR,input_dir_LR) のいずれかを指定する必要があります
+            "--output_pre", testpre[nn], # the subfolder to save current scene, optional # 現在のシーンを保存するサブフォルダー (オプション)
+            "--num_resblock", "16",  # our model has 16 residual blocks,  # 私たちのモデルには 16 個の残差ブロックがあります。
             # the pre-trained FRVSR and TecoGAN mini have 10 residual blocks
-                # 事前トレーニングされた FRVSR と TecoGAN mini には 10 個の残差ブロックがあります
+            # 事前トレーニングされた FRVSR と TecoGAN mini には 10 個の残差ブロックがあります
             "--checkpoint", './model/TecoGAN',  # the path of the trained model, # トレーニングされたモデルのパス、
             "--output_ext", "png"               # png is more accurate, jpg is smaller # png の方が正確ですが、jpg の方が小さいです
         ]
