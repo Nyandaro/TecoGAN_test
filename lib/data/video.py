@@ -1,15 +1,21 @@
 #!/usr/bin/env python
 
 '''
-Video capture sample.
+Video capture sample. ビデオキャプチャのサンプル。
 
 Sample shows how VideoCapture class can be used to acquire video
 frames from a camera of a movie file. Also the sample provides
 an example of procedural video generation by an object, mimicking
 the VideoCapture interface (see Chess class).
+VideoCapture クラスを使用してビデオを取得する方法を示すサンプル
+ムービーファイルのカメラからのフレーム。サンプルも提供しています
+オブジェクトによる手続き型ビデオ生成の例。
+VideoCapture インターフェイス (Chess クラスを参照)。
 
 'create_capture' is a convinience function for capture creation,
 falling back to procedural video in case of error.
+create_capture」はキャプチャ作成のための便利な関数です。
+エラーが発生した場合は手順ビデオに戻ります。
 
 Usage:
     video.py [--shotdir <shot path>] [source0] [source1] ...'
