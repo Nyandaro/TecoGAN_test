@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 
-# Python 2/3 compatibility
+# Python 2/3 compatibility # Python 2/3 互換性
 from __future__ import print_function
 
 import numpy as np
