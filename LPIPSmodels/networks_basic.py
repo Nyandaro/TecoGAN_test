@@ -132,7 +132,7 @@ class PNetLin(nn.Module):
         in1_sc = (in1 - self.shift.expand_as(in0))/self.scale.expand_as(in0)
 
         if(self.version=='0.0'):
-            # v0.0 - original release had a bug, where input was not scaled
+            # v0.0 - original release had a bug, where input was not scaled元のリリースにはバグがあり、入力がスケーリングされませんでした
             in0_input = in0
             in1_input = in1
         else:
