@@ -133,7 +133,7 @@ elif( runcase == 3 ): # Train TecoGAN
     '''
     FRVSRModel = "model/ourFRVSR" 
     if(not os.path.exists(FRVSRModel+".data-00000-of-00001")):
-        # Download our pre-trained FRVSR model
+        # Download our pre-trained FRVSR model # 事前トレーニングされた FRVSR モデルをダウンロードする
         print("pre-trained FRVSR model not found, downloading")
         cmd0 = "wget http://ge.in.tum.de/download/2019-TecoGAN/FRVSR_Ours.zip -O model/ofrvsr.zip;"
         cmd0 += "unzip model/ofrvsr.zip -d model; rm model/ofrvsr.zip"
@@ -149,26 +149,26 @@ elif( runcase == 3 ): # Train TecoGAN
     # train TecoGAN, loss = l2 + VGG54 loss + A spatio-temporal Discriminator
     # TecoGAN を訓練する、損失 = l2 + VGG54 損失 + 時空間弁別器
     cmd1 = ["python3", "main.py",
-        "--cudaID", "0", # set the cudaID here to use only one GPU
-        "--output_dir", train_dir, # Set the place to save the models.
-        "--summary_dir", os.path.join(train_dir,"log/"), # Set the place to save the log. 
+        "--cudaID", "0", # set the cudaID here to use only one GPU # GPU を 1 つだけ使用するようにここで cudaID を設定します
+        "--output_dir", train_dir, # Set the place to save the models. # モデルを保存する場所を設定します。
+        "--summary_dir", os.path.join(train_dir,"log/"), # Set the place to save the log.  # ログの保存場所を設定します。
         "--mode","train",
-        "--batch_size", "4" , # small, because GPU memory is not big
-        "--RNN_N", "10" , # train with a sequence of RNN_N frames, >6 is better, >10 is not necessary
-        "--movingFirstFrame", # a data augmentation
+        "--batch_size", "4" , # small, because GPU memory is not big # GPUメモリが大きくないので小さい
+        "--RNN_N", "10" , # train with a sequence of RNN_N frames, >6 is better, >10 is not necessary # RNN_N フレームのシーケンスを使用してトレーニングします。6 を超える方が優れており、10 を超える必要はありません
+        "--movingFirstFrame", # a data augmentation # データの拡張
         "--random_crop",
         "--crop_size", "32",
         "--learning_rate", "0.00005",
         # -- learning_rate step decay, here it is not used --
         # -- learning_rate ステップ減衰、ここでは使用されません --
         "--decay_step", "500000", 
-        "--decay_rate", "1.0", # 1.0 means no decay
+        "--decay_rate", "1.0", # 1.0 means no decay # 1.0 は減衰がないことを意味します
         "--stair",
-        "--beta", "0.9", # ADAM training parameter beta
-        "--max_iter", "500000", # 500k or more, the one we present is trained for 900k
-        "--save_freq", "10000", # the frequency we save models
+        "--beta", "0.9", # ADAM training parameter beta # ADAMトレーニングパラメータベータ版
+        "--max_iter", "500000", # 500k or more, the one we present is trained for 900k # 500k 以上、私たちが提示するものは 900k でトレーニングされています
+        "--save_freq", "10000", # the frequency we save models # モデルを保存する頻度
         # -- network architecture parameters --
-        "--num_resblock", "16", # FRVSR and TecoGANmini has num_resblock as 10. The TecoGAN has 16.
+        "--num_resblock", "16", # FRVSR and TecoGANmini has num_resblock as 10. The TecoGAN has 16. # FRVSR と TecoGANmini の num_resblock は 10 です。TecoGAN の num_resblock は 16 です
         # -- VGG loss, disable with vgg_scaling < 0
         # -- VGG 損失、vgg_scaling < 0 で無効化
         "--vgg_scaling", "0.2",
@@ -218,6 +218,15 @@ elif( runcase == 3 ): # Train TecoGAN
         The difference here is 
         whether to load the whole graph icluding ADAM training averages/momentums/ and so on
         or just load existing pre-trained weights.
+        FRVSR から事前トレーニングされたモデルをロードすると、トレーニングが高速化されます。
+    --checkpoint、モデルのパス、ここでは事前トレーニングされた FRVSR が与えられます
+    --pre_trained_model、古い (おそらく誤って停止した) トレーニングを続行するには、
+    pre_trained_model は false である必要があり、チェックポイントは次のような最後のモデルである必要があります。
+    ex_TecoGANmm-dd-hh/モデル-xxxxxxx
+    新しく異なるトレーニングを開始するには、pre_trained_model を True にします。
+    ここでの違いは、
+    ADAM トレーニングの平均/運動量などを含むグラフ全体をロードするかどうか
+    または、既存の事前トレーニングされた重みをロードするだけです。
     '''
     cmd1 += [ # based on a pre-trained FRVSR model. Here we want to train a new adversarial training
         "--pre_trained_model", # True
@@ -268,10 +277,10 @@ elif( runcase == 3 ): # Train TecoGAN
     pid = mycall(cmd1, block=True) 
     try: # catch interruption for training # トレーニングの中断をキャッチ
         pid.communicate()
-    except KeyboardInterrupt: # Ctrl + C to stop current training try to save the last model 
+    except KeyboardInterrupt: # Ctrl + C to stop current training try to save the last model  # Ctrl + C を押して現在のトレーニングを停止し、最後のモデルを保存してみてください
         print("runGAN.py: sending SIGINT signal to the sub process...")
         pid.send_signal(signal.SIGINT)
-        # try to save the last model 
+        # try to save the last model  # 最後のモデルを保存してみる
         pid.communicate()
         print("runGAN.py: finished...")
         
