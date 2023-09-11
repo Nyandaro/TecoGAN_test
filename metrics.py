@@ -17,13 +17,13 @@ FLAGS(sys.argv)
 if(not os.path.exists(FLAGS.output)):
     os.mkdir(FLAGS.output)
     
-# The operation used to print out the configuration
+# The operation used to print out the configuration # 設定を出力するために使用される操作
 def print_configuration_op(FLAGS):
     print('[Configurations]:')
     for name, value in FLAGS.flag_values_dict().items():
         print('\t%s: %s'%(name, str(value)))
     print('End of configuration')
-# custom Logger to write Log to file
+# custom Logger to write Log to file # ログをファイルに書き込むカスタム ロガー
 
 def listPNGinDir(dirpath):
     filelist = os.listdir(dirpath)
@@ -36,6 +36,7 @@ def listPNGinDir(dirpath):
 
 def _rgb2ycbcr(img, maxVal=255):
 ##### color space transform, originally from https://github.com/yhjo09/VSR-DUF ##### 
+    ##### 色空間変換、元は https://github.com/yhjo09/VSR-DUF #####
     O = np.array([[16],
                   [128],
                   [128]])
@@ -57,12 +58,14 @@ def _rgb2ycbcr(img, maxVal=255):
 
 def to_uint8(x, vmin, vmax):
 ##### color space transform, originally from https://github.com/yhjo09/VSR-DUF ##### 
+    ##### 色空間変換、元は https://github.com/yhjo09/VSR-DUF #####
     x = x.astype('float32')
     x = (x-vmin)/(vmax-vmin)*255 # 0~255
     return np.clip(np.round(x), 0, 255)
 
 def psnr(img_true, img_pred):
 ##### PSNR with color space transform, originally from https://github.com/yhjo09/VSR-DUF ##### 
+    ##### 色空間変換を含む PSNR、元は https://github.com/yhjo09/VSR-DUF #####
     Y_true = _rgb2ycbcr(to_uint8(img_true, 0, 255), 255)[:,:,0]
     Y_pred = _rgb2ycbcr(to_uint8(img_pred, 0, 255), 255)[:,:,0]
     diff =  Y_true - Y_pred
@@ -115,7 +118,7 @@ model = dm.DistModel()
 model.initialize(model='net-lin',net='alex',use_gpu=True)
 
 cutfr = 2
-# maxV = 0.4, for line 154-166
+# maxV = 0.4, for line 154-166 # maxV = 0.4、154 ～ 166 行目
 
 keys = ["PSNR", "SSIM", "LPIPS", "tOF", "tLP100"] # keys = ["LPIPS"]
 sum_dict    = dict.fromkeys(["FrameAvg_"+_ for _ in keys], 0)
@@ -143,13 +146,13 @@ for folder_i in range(folder_n):
         if "tOF" in keys:# tOF
             output_grey = cv2.cvtColor(output_img, cv2.COLOR_RGB2GRAY)
             target_grey = cv2.cvtColor(target_img, cv2.COLOR_RGB2GRAY)
-            if (i > cutfr): # temporal metrics
+            if (i > cutfr): # temporal metrics # 時間メトリクス
                 target_OF=cv2.calcOpticalFlowFarneback(pre_tar_grey, target_grey, None, 0.5, 3, 15, 3, 5, 1.2, 0)
                 output_OF=cv2.calcOpticalFlowFarneback(pre_out_grey, output_grey, None, 0.5, 3, 15, 3, 5, 1.2, 0)
                 target_OF, ofy, ofx = crop_8x8(target_OF)
                 output_OF, ofy, ofx = crop_8x8(output_OF)
                 OF_diff = np.absolute(target_OF - output_OF)
-                if False: # for motion visualization
+                if False: # for motion visualization # モーション可視化用
                     tOFpath = os.path.join(FLAGS.output,"%03d_tOF"%folder_i)
                     if(not os.path.exists(tOFpath)): os.mkdir(tOFpath)
                     hsv = np.zeros_like(output_img)
@@ -183,7 +186,7 @@ for folder_i in range(folder_n):
             msg +=", ssim %02.2f" %(list_dict["SSIM"][-1])
             
         if "LPIPS" in keys or "tLP100" in keys:
-            img0 = util.im2tensor(target_img) # RGB image from [-1,1]
+            img0 = util.im2tensor(target_img) # RGB image from [-1,1] # [-1,1] からの RGB 画像
             img1 = util.im2tensor(output_img)
         
             if "LPIPS" in keys: # LPIPS
@@ -191,7 +194,7 @@ for folder_i in range(folder_n):
                 list_dict["LPIPS"].append( dist01[0] )
                 msg +=", lpips %02.2f" %(dist01[0])
             
-            if "tLP100" in keys and (i > cutfr):# tLP, temporal metrics
+            if "tLP100" in keys and (i > cutfr):# tLP, temporal metrics # tLP、時間メトリクス
                 dist0t = model.forward(pre_img0, img0)
                 dist1t = model.forward(pre_img1, img1)
                 # print ("tardis %f, outdis %f" %(dist0t, dist1t))
