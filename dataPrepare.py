@@ -24,9 +24,9 @@ os.path.isdir(Flags.summary_dir) or os.makedirs(Flags.summary_dir)
 
 link_path = "https://vimeo.com/"
 video_data_dict = { 
-# Videos and frames are hard-coded. 
-# We select frames to make sure that there is no scene switching in the data
-# We assume that the Flags.duration is 120
+# Videos and frames are hard-coded.  # ビデオとフレームはハードコーディングされています。
+# We select frames to make sure that there is no scene switching in the data # データ内でシーンの切り替えが発生しないようにフレームを選択します
+# We assume that the Flags.duration is 120 # Flags.duration が 120 であると仮定します。
     "121649159" : [0, 310,460,720,860], #1
     "40439273"  : [90,520,700,1760,2920,3120,3450,4750,4950,5220,6500,6900,9420,9750], #2
     "87389090"  : [100,300,500,800,1000,1200,1500,1900,2050,2450,2900], #3
@@ -116,7 +116,7 @@ for keys in video_data_dict:
     print(tar_vid_input)
     info_dict = {"width":-1, "height": -1, "ext": "xxx", }
     
-    # download video from vimeo
+    # download video from vimeo # vimeo からビデオをダウンロード
     try:
         info_dict = ydl.extract_info(tar_vid_input, download=saveframes)
         # we only need info_dict["ext"], info_dict["width"], info_dict["height"]
@@ -127,7 +127,7 @@ for keys in video_data_dict:
         print("youtube_dl error:" + tar_vid_input)
         pass
     
-    # check the downloaded video
+    # check the downloaded video # ダウンロードしたビデオを確認する
     tar_vid_output = os.path.join(Flags.disk_path, keys+'.'+info_dict["ext"])
     if saveframes and (not os.path.exists(tar_vid_output)):
         print("Skipped invalid link or other error:" + tar_vid_input)
@@ -137,7 +137,7 @@ for keys in video_data_dict:
         continue
     valid_video = valid_video + 1
     
-    # get training frames
+    # get training frames # トレーニングフレームを取得する
     for start_fr in video_data_dict[keys]:
         tar_dir = os.path.join(Flags.disk_path, "scene_%04d/"% cur_id)
         if(saveframes):
