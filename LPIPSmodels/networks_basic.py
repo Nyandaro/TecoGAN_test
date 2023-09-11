@@ -16,7 +16,7 @@ from . import pretrained_networks as pn
 
 from . import util
 
-# Off-the-shelf deep network
+# Off-the-shelf deep network既製のディープネットワーク
 class PNet(nn.Module):
     '''Pre-trained network with all channels equally weighted by default'''
     def __init__(self, pnet_type='vgg', pnet_rand=False, use_gpu=True):
@@ -70,7 +70,7 @@ class PNet(nn.Module):
         else:
             return val
 
-# Learned perceptual metric
+# Learned perceptual metric学習された知覚指標
 class PNetLin(nn.Module):
     def __init__(self, pnet_type='vgg', pnet_rand=False, pnet_tune=False, use_dropout=True, use_gpu=True, spatial=False, version='0.1'):
         super(PNetLin, self).__init__()
@@ -231,7 +231,7 @@ class FakeNet(nn.Module):
 class L2(FakeNet):
 
     def forward(self, in0, in1):
-        assert(in0.size()[0]==1) # currently only supports batchSize 1
+        assert(in0.size()[0]==1) # currently only supports batchSize 1現在、batchSize 1 のみをサポートしています
 
         if(self.colorspace=='RGB'):
             (N,C,X,Y) = in0.size()
@@ -248,7 +248,7 @@ class L2(FakeNet):
 class DSSIM(FakeNet):
 
     def forward(self, in0, in1):
-        assert(in0.size()[0]==1) # currently only supports batchSize 1
+        assert(in0.size()[0]==1) # currently only supports batchSize 1現在、batchSize 1 のみをサポートしています
 
         if(self.colorspace=='RGB'):
             value = util.dssim(1.*util.tensor2im(in0.data), 1.*util.tensor2im(in1.data), range=255.).astype('float')
