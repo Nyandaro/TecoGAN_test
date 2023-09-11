@@ -172,7 +172,7 @@ elif( runcase == 3 ): # Train TecoGAN
         # -- VGG loss, disable with vgg_scaling < 0
         # -- VGG 損失、vgg_scaling < 0 で無効化
         "--vgg_scaling", "0.2",
-        "--vgg_ckpt", VGGModelPath, # necessary if vgg_scaling > 0
+        "--vgg_ckpt", VGGModelPath, # necessary if vgg_scaling > 0 # vgg_scaling > 0 の場合に必要
     ]
     '''Video Training data:
     please udate the TrainingDataPath according to ReadMe.md
@@ -204,7 +204,7 @@ elif( runcase == 3 ): # Train TecoGAN
         "--max_frm", "119",
         # -- cpu memory for data loading --
         # -- データ読み込み用の CPU メモリ --
-        "--queue_thread", "12",# Cpu threads for the data. >4 to speedup the training
+        "--queue_thread", "12",# Cpu threads for the data. >4 to speedup the training # データの CPU スレッド。トレーニングをスピードアップするには >4
         "--name_video_queue_capacity", "1024",
         "--video_queue_capacity", "1024",
     ]
@@ -262,7 +262,7 @@ elif( runcase == 3 ): # Train TecoGAN
     たとえば、最初の 4k ステップで Dst をスムーズにフェードインするには、次のようにします。
     "--Dt_ratio_max"、"1.0"、"--Dt_ratio_0"、"0.0"、"--Dt_ratio_add"、"0.00025"
     '''
-    cmd1 += [ # here, the fading in is disabled 
+    cmd1 += [ # here, the fading in is disabled  # ここではフェードインが無効になっています
         "--Dt_ratio_max", "1.0",
         "--Dt_ratio_0", "1.0", 
         "--Dt_ratio_add", "0.0", 
