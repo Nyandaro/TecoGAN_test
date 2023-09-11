@@ -47,7 +47,6 @@ class BaseModel():
     # サブクラスで使用できるヘルパーロード関数
     def load_network(self, network, network_label, epoch_label):
         # embed()
-        #埋め込み()
         save_filename = '%s_net_%s.pth' % (epoch_label, network_label)
         save_path = os.path.join(self.save_dir, save_filename)
         print('Loading network from %s'%save_path)
