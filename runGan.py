@@ -91,7 +91,7 @@ elif( runcase == 1 ): # inference a trained model # トレーニング済みモ�
         ]
         mycall(cmd1).communicate()
 
-elif( runcase == 2 ): # calculate all metrics, and save the csv files, should use png
+elif( runcase == 2 ): # calculate all metrics, and save the csv files, should use png# すべてのメトリクスを計算し、CSV ファイルを保存します。png を使用する必要があります
 
     testpre = ["calendar"] # just put more scenes to evaluate all of them # すべてのシーンを評価するには、さらにシーンを追加するだけです
     dirstr = './results/'  # the outputs
