@@ -12,7 +12,7 @@ from tensorflow.python.util import deprecation
 deprecation._PRINT_DEPRECATION_WARNINGS = False
 import random as rn
 
-# fix all randomness, except for multi-treading or GPU process
+# fix all randomness, except for multi-treading or GPU process # マルチトレッドまたは GPU プロセスを除くすべてのランダム性を修正します
 os.environ['PYTHONHASHSEED'] = '0'
 np.random.seed(42)
 rn.seed(12345)
@@ -31,7 +31,7 @@ Flags = tf.app.flags
 
 Flags.DEFINE_integer('rand_seed', 1 , 'random seed' )
 
-# Directories
+# Directories # ディレクトリ
 Flags.DEFINE_string('input_dir_LR', None, 'The directory of the input resolution input data, for inference mode')
 Flags.DEFINE_integer('input_dir_len', -1, 'length of the input for inference mode, -1 means all')
 Flags.DEFINE_string('input_dir_HR', None, 'The directory of the input resolution input data, for inference mode')
@@ -45,12 +45,12 @@ Flags.DEFINE_string('summary_dir', None, 'The dirctory to output the summary')
 # Models
 Flags.DEFINE_string('checkpoint', None, 'If provided, the weight will be restored from the provided checkpoint')
 Flags.DEFINE_integer('num_resblock', 16, 'How many residual blocks are there in the generator')
-# Models for training
+# Models for training # トレーニング用のモデル
 Flags.DEFINE_boolean('pre_trained_model', False, 'If True, the weight of generator will be loaded as an initial point'
                                                      'If False, continue the training')
 Flags.DEFINE_string('vgg_ckpt', None, 'path to checkpoint file for the vgg19')
 
-# Machine resources
+# Machine resources # マシンリソース
 Flags.DEFINE_string('cudaID', '0', 'CUDA devices')
 Flags.DEFINE_integer('queue_thread', 6, 'The threads of the queue (More threads can speedup the training process.')
 Flags.DEFINE_integer('name_video_queue_capacity', 512, 'The capacity of the filename queue (suggest large to ensure'
@@ -59,7 +59,7 @@ Flags.DEFINE_integer('video_queue_capacity', 256, 'The capacity of the video que
                                                    'enough random shuffle')
 Flags.DEFINE_integer('video_queue_batch', 2, 'shuffle_batch queue capacity')
                                                    
-# Training details
+# Training details # トレーニングの詳細
 # The data preparing operation
 Flags.DEFINE_integer('RNN_N', 10, 'The number of the rnn recurrent length')
 Flags.DEFINE_integer('batch_size', 4, 'Batch size of the input batch')
@@ -67,19 +67,19 @@ Flags.DEFINE_boolean('flip', True, 'Whether random flip data augmentation is app
 Flags.DEFINE_boolean('random_crop', True, 'Whether perform the random crop')
 Flags.DEFINE_boolean('movingFirstFrame', True, 'Whether use constant moving first frame randomly.')
 Flags.DEFINE_integer('crop_size', 32, 'The crop size of the training image')
-# Training data settings
+# Training data settings # 学習データの設定
 Flags.DEFINE_string('input_video_dir', '', 'The directory of the video input data, for training')
 Flags.DEFINE_string('input_video_pre', 'scene', 'The pre of the directory of the video input data')
 Flags.DEFINE_integer('str_dir', 1000, 'The starting index of the video directory')
 Flags.DEFINE_integer('end_dir', 2000, 'The ending index of the video directory')
 Flags.DEFINE_integer('end_dir_val', 2050, 'The ending index for validation of the video directory')
 Flags.DEFINE_integer('max_frm', 119, 'The ending index of the video directory')
-# The loss parameters
+# The loss parameters # 損失パラメータ
 Flags.DEFINE_float('vgg_scaling', -0.002, 'The scaling factor for the VGG perceptual loss, disable with negative value')
 Flags.DEFINE_float('warp_scaling', 1.0, 'The scaling factor for the warp')
 Flags.DEFINE_boolean('pingpang', False, 'use bi-directional recurrent or not')
 Flags.DEFINE_float('pp_scaling', 1.0, 'factor of pingpang term, only works when pingpang is True')
-# Training parameters
+# Training parameters # トレーニングパラメータ
 Flags.DEFINE_float('EPS', 1e-12, 'The eps added to prevent nan')
 Flags.DEFINE_float('learning_rate', 0.0001, 'The learning rate for the network')
 Flags.DEFINE_integer('decay_step', 500000, 'The steps needed to decay the learning rate')
@@ -92,7 +92,7 @@ Flags.DEFINE_integer('max_iter', 1000000, 'The max iteration of the training')
 Flags.DEFINE_integer('display_freq', 20, 'The diplay frequency of the training process')
 Flags.DEFINE_integer('summary_freq', 100, 'The frequency of writing summary')
 Flags.DEFINE_integer('save_freq', 10000, 'The frequency of saving images')
-# Dst parameters
+# Dst parameters # Dstパラメータ
 Flags.DEFINE_float('ratio', 0.01, 'The ratio between content loss and adversarial loss')
 Flags.DEFINE_boolean('Dt_mergeDs', True, 'Whether only use a merged Discriminator.')
 Flags.DEFINE_float('Dt_ratio_0', 1.0, 'The starting ratio for the temporal adversarial loss')
@@ -104,25 +104,25 @@ Flags.DEFINE_boolean('D_LAYERLOSS', True, 'Whether use layer loss from D')
 
 FLAGS = Flags.FLAGS
 
-# Set CUDA devices correctly if you use multiple gpu system
+# Set CUDA devices correctly if you use multiple gpu system # 複数の GPU システムを使用する場合は、CUDA デバイスを正しく設定します
 os.environ["CUDA_VISIBLE_DEVICES"]=FLAGS.cudaID 
-# Fix randomness
+# Fix randomness # ランダム性を修正する
 my_seed = FLAGS.rand_seed
 rn.seed(my_seed)
 np.random.seed(my_seed)
 tf.set_random_seed(my_seed)
 
-# Check the output_dir is given
+# Check the output_dir is given # Output_dir が指定されていることを確認します
 if FLAGS.output_dir is None:
     raise ValueError('The output directory is needed')
-# Check the output directory to save the checkpoint
+# Check the output directory to save the checkpoint # 出力ディレクトリを確認してチェックポイントを保存します
 if not os.path.exists(FLAGS.output_dir):
     os.mkdir(FLAGS.output_dir)
-# Check the summary directory to save the event
+# Check the summary directory to save the event # 概要ディレクトリを確認してイベントを保存します
 if not os.path.exists(FLAGS.summary_dir):
     os.mkdir(FLAGS.summary_dir)
 
-# custom Logger to write Log to file
+# custom Logger to write Log to file # ログをファイルに書き込むカスタム ロガー
 class Logger(object):
     def __init__(self):
         self.terminal = sys.stdout
@@ -145,7 +145,7 @@ def printVariable(scope, key = tf.GraphKeys.MODEL_VARIABLES):
         total_sz += np.prod(k[1])
     print("total size: %d" %total_sz)
     
-def preexec(): # Don't forward signals.
+def preexec(): # Don't forward signals. # シグナルを転送しないでください。
     os.setpgrp()
     
 def testWhileTrain(FLAGS, testno = 0):
@@ -156,32 +156,32 @@ def testWhileTrain(FLAGS, testno = 0):
         depending on python, and your training settings
     '''
     desstr = os.path.join(FLAGS.output_dir, 'train/') # saving in the ./train/ directory
-    cmd1 = ["python3", "main.py", # never tested with python2...
+    cmd1 = ["python3", "main.py", # never tested with python2... # Python2 でテストしたことはありません...
         "--output_dir", desstr, 
         "--summary_dir", desstr,
         "--mode","inference",
         "--num_resblock", "%d"%FLAGS.num_resblock,
         "--checkpoint", os.path.join(FLAGS.output_dir, 'model-%d'%testno),
         "--cudaID", FLAGS.cudaID]
-    # a folder for short test 
-    cmd1 += ["--input_dir_LR", "./LR/calendar/", # update the testing sequence
-             "--output_pre", "", # saving in train folder directly
+    # a folder for short test  # ショートテスト用のフォルダー
+    cmd1 += ["--input_dir_LR", "./LR/calendar/", # update the testing sequence # テストシーケンスを更新する
+             "--output_pre", "", # saving in train folder directly # trainフォルダに直接保存
              "--output_name", "%09d"%testno, # name
              "--input_dir_len", "10",]
     print('[testWhileTrain] step %d:'%testno)
     print(' '.join(cmd1))
-    # ignore signals
+    # ignore signals # シグナルを無視する
     return subprocess.Popen(cmd1, preexec_fn = preexec)
     
-if False: # If you want to take a look of the configuration, True
+if False: # If you want to take a look of the configuration, True # 設定を確認したい場合は、True
     print_configuration_op(FLAGS)
 
-# the inference mode (just perform super resolution on the input image)
+# the inference mode (just perform super resolution on the input image) # 推論モード (入力画像に対して超解像を実行するだけ)
 if FLAGS.mode == 'inference':
     if FLAGS.checkpoint is None:
         raise ValueError('The checkpoint file is needed to performing the test.')
 
-    # Declare the test data reader
+    # Declare the test data reader # テストデータリーダーを宣言する
     inference_data = inference_data_loader(FLAGS)
     input_shape = [1,] + list(inference_data.inputs[0].shape)
     output_shape = [1,input_shape[1]*4, input_shape[2]*4, 3]
@@ -191,7 +191,7 @@ if FLAGS.mode == 'inference':
     print("input shape:", input_shape)
     print("output shape:", output_shape)
     
-    # build the graph
+    # build the graph # グラフを構築する
     inputs_raw = tf.placeholder(tf.float32, shape=input_shape, name='inputs_raw')
     
     pre_inputs = tf.Variable(tf.zeros(input_shape), trainable=False, name='pre_inputs')
@@ -203,6 +203,7 @@ if FLAGS.mode == 'inference':
     with tf.variable_scope('generator'):
         gen_output = generator_F(inputs_all, 3, reuse=False, FLAGS=FLAGS)
         # Deprocess the images outputed from the model, and assign things for next frame
+       # モデルから出力された画像をデプロセスし、次のフレームに割り当てる
         with tf.control_dependencies([ tf.assign(pre_inputs, inputs_raw)]):
             outputs = tf.assign(pre_gen, deprocess(gen_output))
     
@@ -218,12 +219,13 @@ if FLAGS.mode == 'inference':
     print('Finish building the network')
     
     # In inference time, we only need to restore the weight of the generator
+  # 推論時には、ジェネレーターの重みを復元するだけで済みます。
     var_list = tf.get_collection(tf.GraphKeys.MODEL_VARIABLES, scope='generator')
     var_list = var_list + tf.get_collection(tf.GraphKeys.MODEL_VARIABLES, scope='fnet')
     
     weight_initiallizer = tf.train.Saver(var_list)
     
-    # Define the initialization operation
+    # Define the initialization operation # 初期化オペレーションを定義する
     init_op = tf.global_variables_initializer()
     local_init_op = tf.local_variables_initializer()
 
@@ -237,13 +239,13 @@ if FLAGS.mode == 'inference':
         os.makedirs(image_dir)
         
     with tf.Session(config=config) as sess:
-        # Load the pretrained model
+        # Load the pretrained model # 事前トレーニング済みモデルをロードする
         sess.run(init_op)
         sess.run(local_init_op)
         
         print('Loading weights from ckpt model')
         weight_initiallizer.restore(sess, FLAGS.checkpoint)
-        if False: # If you want to take a look of the weights, True
+        if False: # If you want to take a look of the weights, True # 重みを確認したい場合は、True
             printVariable('generator')
             printVariable('fnet')
         max_iter = len(inference_data.inputs)
@@ -265,13 +267,13 @@ if FLAGS.mode == 'inference':
                 print('saving image %s' % filename)
                 out_path = os.path.join(image_dir, "%s.%s"%(filename,FLAGS.output_ext))
                 save_img(out_path, output_frame[0])
-            else:# First 5 is a hard-coded symmetric frame padding, ignored but time added!
+            else:# First 5 is a hard-coded symmetric frame padding, ignored but time added! # 最初の 5 はハードコーディングされた対称フレーム パディングであり、無視されますが、時間が追加されます。
                 print("Warming up %d"%(5-i))
     print( "total time " + str(srtime) + ", frame number " + str(max_iter) )
         
-# The training mode
+# The training mode # トレーニングモード
 elif FLAGS.mode == 'train':
-    # hard coded save
+    # hard coded save # ハードコードされた保存
     filelist = ['main.py','lib/Teco.py','lib/frvsr.py','lib/dataloader.py','lib/ops.py']
     for filename in filelist:
         shutil.copyfile('./' + filename, FLAGS.summary_dir + filename.replace("/","_"))
@@ -287,7 +289,7 @@ elif FLAGS.mode == 'train':
     # Network = collections.namedtuple('Network', 'gen_output, train, learning_rate, update_list, '
     #                                     'update_list_name, update_list_avg, image_summary')
     
-    # Add scalar summary
+    # Add scalar summary # スカラーサマリーを追加
     tf.summary.scalar('learning_rate', Net.learning_rate)
     train_summary = []
     for key, value in zip(Net.update_list_name, Net.update_list_avg):
@@ -296,16 +298,16 @@ elif FLAGS.mode == 'train':
     train_summary += Net.image_summary
     merged = tf.summary.merge(train_summary)
     
-    validat_summary = [] # val data statistics is not added to average
+    validat_summary = [] # val data statistics is not added to average # val データ統計は平均に加算されません
     uplen = len(Net.update_list)
     for key, value in zip(Net.update_list_name[:uplen], Net.update_list):
         # 'map_loss, scale_loss, FrameA_loss, FrameA_loss,...'
         validat_summary += [tf.summary.scalar("val_" + key, value)]
     val_merged = tf.summary.merge(validat_summary)
 
-    # Define the saver and weight initiallizer
+    # Define the saver and weight initiallizer # セーバーとウェイト初期化子を定義する
     saver = tf.train.Saver(max_to_keep=50)
-    # variable lists
+    # variable lists  # 変数リスト
     all_var_list = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES)
     tfflag = tf.GraphKeys.MODEL_VARIABLES #tf.GraphKeys.TRAINABLE_VARIABLES
     
@@ -319,16 +321,16 @@ elif FLAGS.mode == 'train':
             print('Prepare to load %d weights from the pre-trained model for discriminator'%len(dis_list))
             assign_ops += dis_list
         
-    if FLAGS.vgg_scaling > 0.0: # VGG weights are not trainable
+    if FLAGS.vgg_scaling > 0.0: # VGG weights are not trainable # VGG ウェイトはトレーニングできません
         vgg_var_list = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope='vgg_19')
         vgg_restore = tf.train.Saver(vgg_var_list)
     
     print('Finish building the network.')
     
-    # Start the session
+    # Start the session # セッションを開始する
     config = tf.ConfigProto()
     config.gpu_options.allow_growth = True
-    # init_op = tf.initialize_all_variables() # MonitoredTrainingSession will initialize automatically
+    # init_op = tf.initialize_all_variables() # MonitoredTrainingSession will initialize automatically # MonitoredTrainingSession は自動的に初期化されます
     with tf.train.MonitoredTrainingSession(config=config, save_summaries_secs=None, save_checkpoint_secs=None) as sess:
         train_writer = tf.summary.FileWriter(FLAGS.summary_dir, sess.graph)
         
@@ -347,12 +349,13 @@ elif FLAGS.mode == 'train':
                 print('Loading everything from the checkpoint to continue the training...')
                 saver.restore(sess, FLAGS.checkpoint)
                 # this will restore everything, including ADAM training parameters and global_step
+          # これにより、ADAM トレーニング パラメーターと global_step を含むすべてが復元されます
             else:
                 print('Loading weights from the pre-trained model to start a new training...')
-                sess.run(assign_ops) # only restore existing model weights
+                sess.run(assign_ops) # only restore existing model weights # 既存のモデルの重みのみを復元します
             
         print('The first run takes longer time for training data loading...')
-        # get the session for save
+        # get the session for save # 保存するセッションを取得します
         _sess = sess
         while type(_sess).__name__ != 'Session':
             # pylint: disable=W0212
@@ -363,9 +366,9 @@ elif FLAGS.mode == 'train':
             print('Save initial checkpoint, before any training')
             init_run_no = sess.run(Net.global_step)
             saver.save(save_sess, os.path.join(FLAGS.output_dir, 'model'), global_step=init_run_no)
-            testWhileTrain(FLAGS, init_run_no) # make sure that testWhileTrain works
+            testWhileTrain(FLAGS, init_run_no) # make sure that testWhileTrain works # testwhileTrain が動作することを確認する
         
-        # Performing the training
+        # Performing the training # トレーニングの実行
         frame_len = (FLAGS.RNN_N*2-1) if FLAGS.pingpang else FLAGS.RNN_N
         max_iter, step, start = FLAGS.max_iter, 0, time.time()
         if max_iter is None:
