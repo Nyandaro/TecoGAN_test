@@ -3,7 +3,7 @@ from lib.frvsr import *
 VGG_MEAN = [123.68, 116.78, 103.94]
 
 def VGG19_slim(input, reuse, deep_list=None, norm_flag=True):
-    # deep_list, define the feature to extract
+    # deep_list, define the feature to extract # deep_list、抽出する特徴を定義します
     with tf.device('/gpu:0'):
         # preprocessing:
         input_img = deprocess(input)
@@ -24,14 +24,14 @@ def VGG19_slim(input, reuse, deep_list=None, norm_flag=True):
     return results
     
     
-# Definition of the discriminator,
-# the structure here is a normal structure, 
-# its inputs extend it to a spatio-temporal D, when using in TecoGAN function
+# Definition of the discriminator, # 識別子の定義、
+# the structure here is a normal structure, ここでの構造は通常の構造であり、TecoGAN 関数で使用する場合
+# its inputs extend it to a spatio-temporal D, when using in TecoGAN function その入力はそれを時空間 D に拡張します。
 def discriminator_F(dis_inputs, FLAGS=None):
     if FLAGS is None:
         raise ValueError('No FLAGS is provided for generator')
 
-    # Define the discriminator block
+    # Define the discriminator block # 識別ブロックを定義する
     def discriminator_block(inputs, output_channel, kernel_size, stride, scope):
         with tf.variable_scope(scope):
             net = conv2(inputs, kernel_size, output_channel, stride, use_bias=False, scope='conv1')
@@ -42,14 +42,14 @@ def discriminator_F(dis_inputs, FLAGS=None):
         
     layer_list = []
     with tf.device('/gpu:0'), tf.variable_scope('discriminator_unit'):
-        # The input layer
+        # The input layer # 入力層
         with tf.variable_scope('input_stage'):
-            # no batchnorm for the first layer
+            # no batchnorm for the first layer # 最初の層にはバッチノルムはありません
             net = conv2(dis_inputs, 3, 64, 1, scope='conv')
             net = lrelu(net, 0.2) # (b, h,w,64)
             
 
-        # The discriminator block part
+        # The discriminator block part # 識別ブロック部分
         # block 1
         net = discriminator_block(net, 64, 4, 2, 'disblock_1')
         layer_list += [net] # (b, h/2,w/2,64)
@@ -66,7 +66,7 @@ def discriminator_F(dis_inputs, FLAGS=None):
         net = discriminator_block(net, 256, 4, 2, 'disblock_7')
         layer_list += [net]  # (b, h/16,w/16,256)
 
-        # The dense layer 1
+        # The dense layer 1 # 緻密な層 1
         with tf.variable_scope('dense_layer_2'):
             net = denselayer(net, 1) # channel-wise dense layer
             net = tf.nn.sigmoid(net) # (h/16,w/16,1)
@@ -84,21 +84,21 @@ def TecoGAN(r_inputs, r_targets, FLAGS, GAN_Flag=True):
         r_targets = tf.concat([r_targets, r_targets_rev_input],axis = 1)
         inputimages = FLAGS.RNN_N * 2 - 1
     
-    # output_channel, the last channel number
+    # output_channel, the last channel number #output_channel、最後のチャンネル番号
     output_channel = r_targets.get_shape().as_list()[-1]
     
-    # list for all outputs, and warped previous frames
+    # list for all outputs, and warped previous frames # すべての出力のリストとワープされた前のフレーム
     gen_outputs, gen_warppre = [], []
-    # gen_warppre is not necessary, just for showing in tensorboard
+    # gen_warppre is not necessary, just for showing in tensorboard # gen_warppre は必要ありません。tensorboard で表示するためだけです
     
-    # Define the learning rate and global step
+    # Define the learning rate and global step  # 学習率とグローバル ステップを定義する
     with tf.variable_scope('get_learning_rate_and_global_step'):
         global_step = tf.train.get_or_create_global_step()
         learning_rate = tf.train.exponential_decay(FLAGS.learning_rate, 
                         global_step, FLAGS.decay_step, FLAGS.decay_rate, staircase=FLAGS.stair)
         incr_global_step = tf.assign(global_step, global_step + 1)
         
-    # Build the generator part, fnet
+    # Build the generator part, fnet # ジェネレーター部分 fnet をビルドする
     with tf.device('/gpu:0'), tf.variable_scope('fnet'):
         Frame_t_pre = r_inputs[:, 0:-1, :,:,:] 
         # batch, frame-1, FLAGS.crop_size, FLAGS.crop_size, output_channel
@@ -114,6 +114,7 @@ def TecoGAN(r_inputs, r_targets, FLAGS, GAN_Flag=True):
         # batch * (inputimages-1), FLAGS.crop_size*4, FLAGS.crop_size*4, 2
         gen_flow = tf.reshape( gen_flow, (FLAGS.batch_size,(inputimages-1), FLAGS.crop_size*4, FLAGS.crop_size*4, 2) )
         # Compute the euclidean distance between the two features (input_frames and s_input_warp) as the warp_loss
+        # 2 つの特徴 (input_frames と s_input_warp) 間のユークリッド距離を warp_loss として計算します。
         input_frames = tf.reshape( Frame_t, (FLAGS.batch_size*(inputimages-1), FLAGS.crop_size, FLAGS.crop_size, output_channel) )
         
     # tf.contrib.image.dense_image_warp, only in tf1.8 or larger, no GPU support
@@ -121,9 +122,9 @@ def TecoGAN(r_inputs, r_targets, FLAGS, GAN_Flag=True):
         tf.reshape( Frame_t_pre, (FLAGS.batch_size*(inputimages-1), FLAGS.crop_size, FLAGS.crop_size, output_channel) ),
         gen_flow_lr) # (FLAGS.batch_size*(inputimages-1), FLAGS.crop_size, FLAGS.crop_size, output_channel)
     
-    # Build the generator part, a recurrent generator
+    # Build the generator part, a recurrent generator # ジェネレーター部分、リカレントジェネレーターを構築する
     with tf.variable_scope('generator'):
-        # for the first frame, concat with zeros
+        # for the first frame, concat with zeros # 最初のフレームはゼロで連結します
         input0 = tf.concat( \
             ( r_inputs[:,0,:,:,:], tf.zeros((FLAGS.batch_size, FLAGS.crop_size, FLAGS.crop_size, 3*4*4), \
             dtype=tf.float32) ), axis = -1)
@@ -134,21 +135,21 @@ def TecoGAN(r_inputs, r_targets, FLAGS, GAN_Flag=True):
         gen_outputs.append(gen_pre_output) # frame 0, done
         
         for frame_i in range( inputimages - 1 ):
-            # warp the previously generated frame
+            # warp the previously generated frame # 以前に生成したフレームをワープします
             cur_flow = gen_flow[:, frame_i, :,:,:]
             cur_flow.set_shape( (FLAGS.batch_size, FLAGS.crop_size*4, FLAGS.crop_size*4, 2) )
             gen_pre_output_warp = tf.contrib.image.dense_image_warp(
                 gen_pre_output, cur_flow)
             gen_warppre.append(gen_pre_output_warp) # warp frame [0,n-1] to frame [1,n]
             gen_pre_output_warp = preprocessLR( deprocess(gen_pre_output_warp) )
-            # apply space-to-depth transform
+            # apply space-to-depth transform # 空間から深度への変換を適用する
             gen_pre_output_reshape = tf.reshape(gen_pre_output_warp, (FLAGS.batch_size, FLAGS.crop_size, 4, FLAGS.crop_size, 4, 3) )
             gen_pre_output_reshape = tf.transpose( gen_pre_output_reshape, perm = [0,1,3,2,4,5] )
             # batch,FLAGS.crop_size, FLAGS.crop_size, 4, 4, 3
             gen_pre_output_reshape = tf.reshape(gen_pre_output_reshape, (FLAGS.batch_size, FLAGS.crop_size, FLAGS.crop_size, 3*4*4) )
-            # pack it as the recurrent input
+            # pack it as the recurrent input # 再帰入力としてパックする
             inputs = tf.concat( ( r_inputs[:,frame_i+1,:,:,:], gen_pre_output_reshape ), axis = -1)
-            # super-resolution part
+            # super-resolution part # 超解像部分
             gen_output = generator_F(inputs, output_channel, reuse=True, FLAGS=FLAGS)
             gen_outputs.append(gen_output)
             gen_pre_output = gen_output
@@ -164,7 +165,7 @@ def TecoGAN(r_inputs, r_targets, FLAGS, GAN_Flag=True):
         gen_warppre.set_shape([FLAGS.batch_size, inputimages-1, FLAGS.crop_size*4, FLAGS.crop_size*4, 3])
             
         
-    # these are necessary for losses
+    # these are necessary for losses # これらは損失の場合に必要です
     s_gen_output = tf.reshape(gen_outputs, (FLAGS.batch_size*inputimages, FLAGS.crop_size*4, FLAGS.crop_size*4, 3) )
     s_targets = tf.reshape(r_targets, (FLAGS.batch_size*inputimages, FLAGS.crop_size*4, FLAGS.crop_size*4, 3) )
             
@@ -177,7 +178,7 @@ def TecoGAN(r_inputs, r_targets, FLAGS, GAN_Flag=True):
             gen_vgg = VGG19_slim(s_gen_output, reuse=False, deep_list=vgg_layer_labels)
             target_vgg = VGG19_slim(s_targets, reuse=True, deep_list=vgg_layer_labels)
             
-    if(GAN_Flag):# build the discriminator
+    if(GAN_Flag):# build the discriminator # 識別器を構築する
         # prepare inputs
         with tf.device('/gpu:0'), tf.name_scope('input_Tdiscriminator'):
             t_size = int( 3 * (inputimages // 3) ) # 3 frames are used as one entry, the last inputimages%3 frames are abandoned
@@ -187,7 +188,7 @@ def TecoGAN(r_inputs, r_targets, FLAGS, GAN_Flag=True):
                 (FLAGS.batch_size*t_size, FLAGS.crop_size*4, FLAGS.crop_size*4, 3) )
             t_batch = FLAGS.batch_size*t_size//3
             
-            if not FLAGS.pingpang: # backward motion has to be calculated
+            if not FLAGS.pingpang: # backward motion has to be calculated # 後方への動きを計算する必要がある
                 fnet_input_back = tf.concat( (r_inputs[:, 2:t_size:3, :,:,:], r_inputs[:, 1:t_size:3, :,:,:] ), axis = -1 )
                 fnet_input_back = tf.reshape( fnet_input_back, (t_batch, FLAGS.crop_size, FLAGS.crop_size, 2*output_channel) )
                 
@@ -199,27 +200,27 @@ def TecoGAN(r_inputs, r_targets, FLAGS, GAN_Flag=True):
                 gen_flow_back = tf.reshape( gen_flow_back, (FLAGS.batch_size, t_size//3, FLAGS.crop_size*4, FLAGS.crop_size*4, 2) )
                 
                 T_inputs_VPre_batch = tf.identity(gen_flow[:,0:t_size:3,:,:,:]) # forward motion reused, 
-                T_inputs_V_batch = tf.zeros_like(T_inputs_VPre_batch) # no motion for middle frames, todo remove for better performance
-                T_inputs_VNxt_batch = tf.identity(gen_flow_back) # backward motion
+                T_inputs_V_batch = tf.zeros_like(T_inputs_VPre_batch) # no motion for middle frames, todo remove for better performance # 中間フレームにはモーションを使用せず、パフォーマンスを向上させるために Todo を削除します
+                T_inputs_VNxt_batch = tf.identity(gen_flow_back) # backward motion # 後方移動
                 # The above are all in shape of (FLAGS.batch_size, t_size//3, crop_size, crop_size, 2)
                 
             else:# motion could be reused for Ping-pang sequence, also all in shape of (FLAGS.batch_size, t_size//3, crop_size, crop_size, 2)
-                T_inputs_VPre_batch = tf.identity(gen_flow[:,0:t_size:3,:,:,:]) # forward motion reused, 
-                T_inputs_V_batch = tf.zeros_like(T_inputs_VPre_batch) # no motion for middle frames, 
-                T_inputs_VNxt_batch = tf.identity(gen_flow[:,-2:-1-t_size:-3,:,:,:]) # backward motion reused
+                T_inputs_VPre_batch = tf.identity(gen_flow[:,0:t_size:3,:,:,:]) # forward motion reused,  # 前進モーションを再利用、
+                T_inputs_V_batch = tf.zeros_like(T_inputs_VPre_batch) # no motion for middle frames,  # 中間フレームにはモーションがありません。
+                T_inputs_VNxt_batch = tf.identity(gen_flow[:,-2:-1-t_size:-3,:,:,:]) # backward motion reused # 後方モーションを再利用
             
             T_vel = tf.stack( [T_inputs_VPre_batch, T_inputs_V_batch, T_inputs_VNxt_batch], axis = 2 )
             # batch, t_size/3, 3, FLAGS.crop_size*4, FLAGS.crop_size*4, 2
             T_vel = tf.reshape(T_vel, (FLAGS.batch_size*t_size, FLAGS.crop_size*4, FLAGS.crop_size*4, 2) )
-            T_vel = tf.stop_gradient( T_vel ) # won't passing gradient to fnet from discriminator, details in TecoGAN supplemental paper 
+            T_vel = tf.stop_gradient( T_vel ) # won't passing gradient to fnet from discriminator, details in TecoGAN supplemental paper  # 識別器から fnet に勾配を渡しません。詳細は TecoGAN 補足資料にあります
             
-        if(FLAGS.crop_dt < 1.0): # crop out unstable part for temporal discriminator, details in TecoGAN supplemental paper 
+        if(FLAGS.crop_dt < 1.0): # crop out unstable part for temporal discriminator, details in TecoGAN supplemental paper # 時間弁別器の不安定な部分を切り出す、詳細は TecoGAN 補足論文で
             crop_size_dt = int( FLAGS.crop_size * 4 * FLAGS.crop_dt)
             offset_dt = (FLAGS.crop_size * 4 - crop_size_dt) // 2
             crop_size_dt = FLAGS.crop_size * 4 - offset_dt*2
             paddings =  tf.constant([[0, 0], [offset_dt, offset_dt], [offset_dt, offset_dt],[0,0]])
         
-        # Build the tempo discriminator for the real part
+        # Build the tempo discriminator for the real part # 実部のテンポ弁別器を構築する
         with tf.name_scope('real_Tdiscriminator'):
             real_warp0 = tf.contrib.image.dense_image_warp(t_targets, T_vel) 
             # batch*t_size, h=FLAGS.crop_size*4, w=FLAGS.crop_size*4, 3
@@ -271,23 +272,23 @@ def TecoGAN(r_inputs, r_targets, FLAGS, GAN_Flag=True):
                 else:
                     tdiscrim_fake_output = discriminator_F(fake_warp, FLAGS=FLAGS)
                     
-        # prepare the layer between discriminators
+        # prepare the layer between discriminators # 識別器間のレイヤーを準備する
         if(FLAGS.D_LAYERLOSS): 
-            # The parameters here are hard coded here, just to roughly scale the 
-            #   layer losses to a similar level, around 'Fix_Range',
-            #   so that every layer is playing a role.
-            # A better fine-tuning could improve things.
+            # The parameters here are hard coded here, just to roughly scale the  # ここのパラメータは、大まかに調整するためにハードコードされています
+            #   layer losses to a similar level, around 'Fix_Range', # 層の損失が「Fix_Range」付近で同様のレベルに達し、
+            #   so that every layer is playing a role.# これにより、すべてのレイヤーが役割を果たします
+            # A better fine-tuning could improve things.# より適切に微調整すると、状況が改善される可能性があります
             with tf.device('/gpu:0'), tf.variable_scope('layer_loss'):
-                Fix_Range = 0.02 # hard coded, all layers are roughly scaled to this value
-                Fix_margin = 0.0 # 0.0 will ignore losses on the Discriminator part, which is good,
-                                 # because it is too strong usually. details in paper 
-                sum_layer_loss = 0 # adds-on for generator
-                d_layer_loss = 0 # adds-on for discriminator, clipped with Fix_margin
+                Fix_Range = 0.02 # hard coded, all layers are roughly scaled to this value# ハードコーディングされており、すべてのレイヤーはこの値に大まかにスケーリングされます
+                Fix_margin = 0.0 # 0.0 will ignore losses on the Discriminator part, which is good,# 0.0 は Discriminator 部分の損失を無視します。これは良いことですが、
+                                 # because it is too strong usually. details in paper # 普通に強すぎるから。詳細は紙面で
+                sum_layer_loss = 0 # adds-on for generator# ジェネレーター用のアドオン
+                d_layer_loss = 0 # adds-on for discriminator, clipped with Fix_margin # 識別子のアドオン、Fix_margin でクリップ
                 
                 layer_loss_list = []
                 layer_n = len(real_layers)
                 
-                layer_norm = [12.0, 14.0, 24.0, 100.0] # hard coded, an overall average of all layers
+                layer_norm = [12.0, 14.0, 24.0, 100.0] # hard coded, an overall average of all layers # ハードコードされた、すべてのレイヤーの全体的な平均
                 for layer_i in range(layer_n):
                     real_layer = real_layers[layer_i]
                     false_layer = fake_layers[layer_i]
@@ -312,11 +313,11 @@ def TecoGAN(r_inputs, r_targets, FLAGS, GAN_Flag=True):
                     update_list += [d_layer_loss]
                     update_list_name += ["D_layer_loss_for_D_sum"]
 
-    # Build the loss
+    # Build the loss # 損失を積み上げる
     with tf.variable_scope('generator_loss'):
-        # Content loss, l2 loss 
+        # Content loss, l2 loss # コンテンツ損失、l2 損失
         with tf.device('/gpu:0'), tf.variable_scope('content_loss'):
-            # Compute the euclidean distance between the two features
+            # Compute the euclidean distance between the two features # 2 つの特徴間のユークリッド距離を計算します
             diff1_mse = s_gen_output - s_targets
             # (FLAGS.batch_size*(inputimages), FLAGS.crop_sizex4, FLAGS.crop_sizex4, 3)
             content_loss = tf.reduce_mean(tf.reduce_sum(tf.square(diff1_mse), axis=[3]))
@@ -331,21 +332,21 @@ def TecoGAN(r_inputs, r_targets, FLAGS, GAN_Flag=True):
             warp_loss = tf.reduce_mean(tf.reduce_sum(tf.square(diff2_mse), axis=[3]))
             update_list += [warp_loss]
             update_list_name += ["l2_warp_loss"]
-            # the following line is useless, because low-res warping has no gradient on generator
+            # the following line is useless, because low-res warping has no gradient on generator # 低解像度のワーピングにはジェネレーターに勾配がないため、次の行は役に立ちません
             # gen_loss += FLAGS.warp_scaling * warp_loss 
                         
         vgg_loss = None
         vgg_loss_list = []
         if FLAGS.vgg_scaling > 0.0:
             with tf.device('/gpu:0'), tf.variable_scope('vgg_layer_loss'):
-                # we use 4 VGG layers
+                # we use 4 VGG layers # 4 つの VGG レイヤーを使用します
                 vgg_wei_list = [1.0,1.0,1.0,1.0] 
                 vgg_loss = 0
                 vgg_layer_n = len(vgg_layer_labels)
                 
                 for layer_i in range(vgg_layer_n):
                     curvgg_diff = tf.reduce_sum(gen_vgg[vgg_layer_labels[layer_i]]*target_vgg[vgg_layer_labels[layer_i]], axis=[3])
-                    # cosine similarity, -1~1, 1 best
+                    # cosine similarity, -1~1, 1 best # コサイン類似度、-1~1、1 が最高
                     curvgg_diff = 1.0 - tf.reduce_mean(curvgg_diff) # 0 ~ 2, 0 best
                     scaled_layer_loss = vgg_wei_list[layer_i] * curvgg_diff
                     vgg_loss_list += [curvgg_diff]
@@ -371,11 +372,11 @@ def TecoGAN(r_inputs, r_targets, FLAGS, GAN_Flag=True):
             update_list += [pploss]
             update_list_name += ["PingPang"]
         
-        if(GAN_Flag): # spatio-temporal adversarial loss
+        if(GAN_Flag): # spatio-temporal adversarial loss # 時空間的な敵対的損失
             with tf.variable_scope('t_adversarial_loss'):
                 t_adversarial_loss = tf.reduce_mean(-tf.log(tdiscrim_fake_output + FLAGS.EPS))
-                # we can fade in of the discrim_loss, 
-                # but for TecoGAN paper, we always use FLAGS.Dt_ratio_0 and Dt_ratio_max as 1.0 (no fading in)
+                # we can fade in of the discrim_loss,  # discrim_loss をフェードインできます。
+                # but for TecoGAN paper, we always use FLAGS.Dt_ratio_0 and Dt_ratio_max as 1.0 (no fading in)# ただし、TecoGAN 紙の場合は、常に FLAGS.Dt_ratio_0 と Dt_ratio_max を 1.0 として使用します (フェードインなし)
                 dt_ratio = tf.minimum( FLAGS.Dt_ratio_max, \
                     FLAGS.Dt_ratio_0 + FLAGS.Dt_ratio_add * tf.cast(global_step, tf.float32) )
                         
@@ -385,7 +386,7 @@ def TecoGAN(r_inputs, r_targets, FLAGS, GAN_Flag=True):
             update_list += [t_adversarial_loss]
             update_list_name += ["t_adversarial_loss"]
             
-            # layer loss from discriminator
+            # layer loss from discriminator # 弁別器からの層損失
             if(FLAGS.D_LAYERLOSS):
                 gen_loss += sum_layer_loss * dt_ratio # positive layer loss, with fading in as well
         
@@ -395,9 +396,9 @@ def TecoGAN(r_inputs, r_targets, FLAGS, GAN_Flag=True):
             t_discrim_real_loss = tf.log(tdiscrim_real_output + FLAGS.EPS)
             
             t_discrim_loss = tf.reduce_mean(-(t_discrim_fake_loss + t_discrim_real_loss))\
-            # a criterion of updating Dst
+            # a criterion of updating Dst # Dst更新の基準
             t_balance = tf.reduce_mean(t_discrim_real_loss) + t_adversarial_loss
-            # if t_balance is very large (>0.4), it means the discriminator is too strong
+            # if t_balance is very large (>0.4), it means the discriminator is too strong # t_balance が非常に大きい (>0.4) 場合、それは識別子が強すぎることを意味します
             
             update_list += [t_discrim_loss]
             update_list_name += ["t_discrim_loss"]
@@ -407,20 +408,21 @@ def TecoGAN(r_inputs, r_targets, FLAGS, GAN_Flag=True):
             
             if(FLAGS.D_LAYERLOSS and Fix_margin>0.0 ):
                 discrim_loss = t_discrim_loss + d_layer_loss * dt_ratio  
-                # hinge negative layer loss, with fading in as well
+                # hinge negative layer loss, with fading in as well # ヒンジのネガティブ レイヤの損失、フェードインも発生
             else:
                 discrim_loss = t_discrim_loss
         
         # use a second exp_averager, because updating time is different to loss summary
+        # 更新時間は損失サマリーとは異なるため、2 番目の exp_averager を使用します
         tb_exp_averager = tf.train.ExponentialMovingAverage(decay=0.99)
         update_tb = tb_exp_averager.apply([t_balance]) 
         tb = tb_exp_averager.average(t_balance)
         
-        # Build the discriminator train
+        # Build the discriminator train # 識別器トレインを構築する
         with tf.device('/gpu:0'), tf.variable_scope('tdicriminator_train'):
             tdiscrim_tvars = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope='tdiscriminator')
             tdis_learning_rate = learning_rate
-            if( not FLAGS.Dt_mergeDs ):# use a smaller learning rate when Dt only (Hard-coded as 0.3), otherwise blur too much
+            if( not FLAGS.Dt_mergeDs ):# use a smaller learning rate when Dt only (Hard-coded as 0.3), otherwise blur too much # Dt のみ (0.3 としてハードコード) の場合は小さい学習率を使用します。それ以外の場合はブラーが多すぎます。
                 tdis_learning_rate = tdis_learning_rate * 0.3
             tdiscrim_optimizer = tf.train.AdamOptimizer(tdis_learning_rate, beta1=FLAGS.beta, epsilon=FLAGS.adameps)
             tdiscrim_grads_and_vars = tdiscrim_optimizer.compute_gradients(discrim_loss, tdiscrim_tvars)
@@ -429,12 +431,12 @@ def TecoGAN(r_inputs, r_targets, FLAGS, GAN_Flag=True):
     
     update_list += [gen_loss]
     update_list_name += ["All_loss_Gen"]
-    # a moving average to collect all training statistics
+    # a moving average to collect all training statistics # すべてのトレーニング統計を収集するための移動平均
     exp_averager = tf.train.ExponentialMovingAverage(decay=0.99)
     update_loss = exp_averager.apply(update_list)
     update_list_avg = [exp_averager.average(_) for _ in update_list]
         
-    # Build the Adam_train and Return the network
+    # Build the Adam_train and Return the network # Adam_train を構築してネットワークを返す
     with tf.variable_scope('generator_train'):
         gen_optimizer = tf.train.AdamOptimizer(learning_rate, beta1=FLAGS.beta, epsilon=FLAGS.adameps)
         fnet_optimizer = tf.train.AdamOptimizer(learning_rate, beta1=FLAGS.beta, epsilon=FLAGS.adameps)
@@ -450,8 +452,8 @@ def TecoGAN(r_inputs, r_targets, FLAGS, GAN_Flag=True):
         else:
             update_list_avg += [tb, dt_ratio]
             update_list_name += ["t_balance", "Dst_ratio"]
-            # Need to wait discriminator to perform train step
-            # tf.GraphKeys.UPDATE_OPS: batch normalization layer in discriminator should update first
+            # Need to wait discriminator to perform train step # トレインステップを実行するには識別子を待つ必要があります
+            # tf.GraphKeys.UPDATE_OPS: batch normalization layer in discriminator should update first # tf.GraphKeys.UPDATE_OPS: 弁別器のバッチ正規化層を最初に更新する必要があります
             with tf.control_dependencies(tf.get_collection(tf.GraphKeys.UPDATE_OPS)):
                 counter1 = tf.get_variable( dtype=tf.int32, shape=(), name='gen_train_with_D_counter',\
                     initializer=tf.zeros_initializer())
