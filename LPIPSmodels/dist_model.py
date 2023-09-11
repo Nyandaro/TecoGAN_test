@@ -72,12 +72,12 @@ class DistModel(BaseModel):
                 print('Loading model from: %s'%model_path)
                 self.net.load_state_dict(torch.load(model_path, **kw))
 
-        elif(self.model=='net'): # pretrained network
+        elif(self.model=='net'): # pretrained network# 事前訓練されたネットワーク
             assert not self.spatial, 'spatial argument not supported yet for uncalibrated networks'
             self.net = networks.PNet(use_gpu=use_gpu,pnet_type=net)
             self.is_fake_net = True
         elif(self.model in ['L2','l2']):
-            self.net = networks.L2(use_gpu=use_gpu,colorspace=colorspace) # not really a network, only for testing
+            self.net = networks.L2(use_gpu=use_gpu,colorspace=colorspace) # not really a network, only for testing実際にはネットワークではなく、テストのみを目的としています
             self.model_name = 'L2'
         elif(self.model in ['DSSIM','dssim','SSIM','ssim']):
             self.net = networks.DSSIM(use_gpu=use_gpu,colorspace=colorspace)
@@ -87,7 +87,7 @@ class DistModel(BaseModel):
 
         self.parameters = list(self.net.parameters())
 
-        if self.is_train: # training mode
+        if self.is_train: # training modeトレーニングモード
             # extra network on top to go from distances (d0,d1) => predicted human judgment (h*)
             self.rankLoss = networks.BCERankingLoss(use_gpu=use_gpu)
             self.parameters+=self.rankLoss.parameters
@@ -137,7 +137,7 @@ class DistModel(BaseModel):
                     ans = ans.flatten()
                 else:
                     assert(ans.shape[0] == 1 and len(ans.shape) == 4)
-                    return ans[0,...].transpose([1, 2, 0])                  # Reshape to usual numpy image format: (height, width, channels)
+                    return ans[0,...].transpose([1, 2, 0])                  # Reshape to usual numpy image format: (height, width, channels)通常の numpy 画像形式に再形成します: (高さ、幅、チャンネル)
                 return ans
             else:
                 return d0
@@ -158,7 +158,7 @@ class DistModel(BaseModel):
         else:
             return convert_output(self.d0)
 
-    # ***** TRAINING FUNCTIONS *****
+    # ***** TRAINING FUNCTIONS ********** トレーニング機能 *****
     def optimize_parameters(self):
         self.forward_train()
         self.optimizer_net.zero_grad()
