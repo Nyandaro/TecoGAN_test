@@ -2,11 +2,11 @@
 several running examples, run with
 python3 runGan.py 1 # the last number is the run case number # 最後の数字は実行ケース番号です
 
-runcase == 1    inference a trained model
-runcase == 2    calculate the metrics, and save the numbers in csv
-runcase == 3    training TecoGAN
-runcase == 4    training FRVSR
-runcase == ...  coming... data preparation and so on...
+runcase == 1    inference a trained model   トレーニングされたモデルを推論する
+runcase == 2    calculate the metrics, and save the numbers in csv  メトリクスを計算し、数値を CSV に保存します
+runcase == 3    training TecoGAN   TecoGANのトレーニング
+runcase == 4    training FRVSR     トレーニング FRVSR
+runcase == ...  coming... data preparation and so on...   これから…データの準備など…
 '''
 import os, subprocess, sys, datetime, signal, shutil
 
