@@ -1,5 +1,5 @@
 '''
-several running examples, run with
+several running examples, run with   いくつかの実行例。次のように実行します。
 python3 runGan.py 1 # the last number is the run case number # 最後の数字は実行ケース番号です
 
 runcase == 1    inference a trained model   トレーニングされたモデルを推論する
